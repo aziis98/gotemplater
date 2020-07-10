@@ -1,0 +1,9 @@
+{{- define "a" }}
+<p>Testing "a"</p>
+
+<ul>
+    {{- range .list1 }}
+    <li>{{ . }}</li>
+    {{- end }}
+</ul>
+{{ end }}
