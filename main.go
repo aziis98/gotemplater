@@ -8,13 +8,42 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
+	"unicode"
 
 	"gopkg.in/yaml.v2"
 )
 
-const helpMessage = `
-gotemplater - CLI utility to render Go Templates to files
-`
+var helpMessage = strings.TrimLeftFunc(`
+gotemplater - A super small CLI utility wrapping template.Execute()
+              and template.ExecuteTemplate()
+
+USAGE: 
+gotemplater [OPTIONS...] [FILES...] < [CONFIG_FILE...]
+
+OPTIONS:
+    -h, --help		Shows this message
+    
+    -o, --output FILE	File to write to, by default uses stdout
+    
+    -e, --execute NAME 	Template name to pass to .ExecuteTemplate(), otherwise uses .Execute()
+
+    -d, --data DATA_FILE    Data file to use, otherwise use stdin
+    -f, --format FORMAT	    Format for the data file, can be one of: *"json", "yaml"
+                            *the default format is JSON.
+
+EXAMPLES:
+
+    Print to stdout: 
+        gotemplater template.html < data.json
+
+    Print to file: 
+        gotemplater -o rendered.html template.html < data.json
+
+    Get data from file in another format: 
+        gotemplater -f yaml -d data.yaml -o rendered.html template.html
+
+`, unicode.IsSpace)
 
 func main() {
 	args := os.Args[1:]
@@ -27,7 +56,7 @@ func main() {
 	dataFile := ""
 
 	if len(args) == 0 {
-		fmt.Println(helpMessage)
+		fmt.Print(helpMessage)
 		os.Exit(0)
 	}
 
@@ -46,6 +75,9 @@ func main() {
 		}
 
 		switch flag {
+		case "-h", "--help":
+			fmt.Print(helpMessage)
+			os.Exit(0)
 		case "-e", "--execute":
 			execute = flagValue
 			args = args[2:]
@@ -56,9 +88,13 @@ func main() {
 			dataFile = flagValue
 			args = args[2:]
 		case "-f", "--format":
-			dataFormat = flagValue
+			dataFormat = strings.ToLower(flagValue)
 			args = args[2:]
 		default:
+			if strings.HasPrefix(flag, "-") {
+				log.Fatal(fmt.Errorf(`Unrecognized flag "%s"`, flag))
+			}
+
 			templateFiles = append(templateFiles, fileName)
 			args = args[1:]
 		}
