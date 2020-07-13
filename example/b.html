@@ -1,14 +1,9 @@
-{{- define "b" }}
 <h1>Testing "b"</h1>
 
-<p>
-    Lorem ipsum dolor sit, amet consectetur adipisicing elit. Exercitationem, soluta maiores. Natus quaerat consequuntur
-    maiores ad non harum reiciendis, eius aut asperiores rem eligendi perspiciatis sit adipisci esse velit laboriosam.
-</p>
+{{ .content }}
 
 <ul>
     {{- range .list2 }}
     <li>{{ . }}</li>
     {{- end }}
 </ul>
-{{ end }}

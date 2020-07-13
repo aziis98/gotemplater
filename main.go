@@ -22,15 +22,18 @@ USAGE:
 gotemplater [OPTIONS...] [FILES...] < [CONFIG_FILE...]
 
 OPTIONS:
-    -h, --help		Shows this message
+    -h, --help			Shows this message
     
-    -o, --output FILE	File to write to, by default uses stdout
+    -o, --output FILE		File to write to, by default uses stdout
     
-    -e, --execute NAME 	Template name to pass to .ExecuteTemplate(), otherwise uses .Execute()
+    -e, --execute NAME		Template name to pass to .ExecuteTemplate(), otherwise uses .Execute()
 
-    -d, --data DATA_FILE    Data file to use, otherwise use stdin
-    -f, --format FORMAT	    Format for the data file, can be one of: *"json", "yaml"
-                            *the default format is JSON.
+    -c, --content FILE		Adds a "content"/"Content" variable to the context of the template for 
+				rendering importing data from files
+
+    -d, --data DATA_FILE	Data file to use, otherwise use stdin
+    -f, --format FORMAT		Format for the data file, can be one of: *"json", "yaml"
+				*the default format is JSON.
 
 EXAMPLES:
 
@@ -50,6 +53,7 @@ func main() {
 	templateFiles := []string{}
 
 	execute := ""
+	contentFile := ""
 	outputFile := ""
 
 	dataFormat := "json"
@@ -69,10 +73,8 @@ func main() {
 		if len(args) > 1 {
 			flagValue = args[1]
 		}
-		{
-			flag = args[0]
-			fileName = args[0]
-		}
+		flag = args[0]
+		fileName = args[0]
 
 		switch flag {
 		case "-h", "--help":
@@ -80,6 +82,9 @@ func main() {
 			os.Exit(0)
 		case "-e", "--execute":
 			execute = flagValue
+			args = args[2:]
+		case "-c", "--content":
+			contentFile = flagValue
 			args = args[2:]
 		case "-o", "--output":
 			outputFile = flagValue
@@ -144,14 +149,34 @@ func main() {
 		output = file
 	}
 
-	tmpl, err := template.New("").ParseFiles(templateFiles...)
-	if err != nil {
-		log.Fatal(err)
+	if contentFile != "" {
+		bytes, err := ioutil.ReadFile(contentFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		data["Content"] = string(bytes)
+		data["content"] = string(bytes)
 	}
 
 	if execute == "" {
+		tmpl := template.New("")
+
+		for _, templateFile := range templateFiles {
+			templateSource, err := ioutil.ReadFile(templateFile)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			tmpl.Parse(string(templateSource))
+		}
+
 		tmpl.Execute(output, data)
 	} else {
+		tmpl, err := template.New("").ParseFiles(templateFiles...)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		tmpl.ExecuteTemplate(output, execute, data)
 	}
 }
