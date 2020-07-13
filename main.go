@@ -107,35 +107,11 @@ func main() {
 
 	var bytes []byte
 
-	if dataFile == "" {
-		var err error
-		bytes, err = ioutil.ReadAll(os.Stdin)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		var err error
-		bytes, err = ioutil.ReadFile(dataFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+	readDataFile(dataFile, &bytes)
 
-	var data map[string]interface{}
-	switch dataFormat {
-	case "json":
-		err := json.Unmarshal(bytes, &data)
-		if err != nil {
-			log.Fatal(err)
-		}
-	case "yaml":
-		err := yaml.Unmarshal(bytes, &data)
-		if err != nil {
-			log.Fatal(err)
-		}
-	default:
-		log.Fatal(fmt.Errorf(`The data format "%s" is invalid or not supported, use "json" or "yaml"`, dataFormat))
-	}
+	var data = map[string]interface{}{}
+
+	parseDataFile(bytes, dataFormat, data)
 
 	var output io.Writer
 	if outputFile == "" {
@@ -149,14 +125,7 @@ func main() {
 		output = file
 	}
 
-	if contentFile != "" {
-		bytes, err := ioutil.ReadFile(contentFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		data["Content"] = string(bytes)
-		data["content"] = string(bytes)
-	}
+	readContentFile(contentFile, data)
 
 	if execute == "" {
 		tmpl := template.New("")
@@ -178,5 +147,49 @@ func main() {
 		}
 
 		tmpl.ExecuteTemplate(output, execute, data)
+	}
+}
+
+func readContentFile(contentFile string, data map[string]interface{}) {
+	if contentFile != "" {
+		bytes, err := ioutil.ReadFile(contentFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		data["Content"] = string(bytes)
+		data["content"] = string(bytes)
+	}
+}
+
+func readDataFile(dataFile string, bytes *[]byte) {
+	var err error
+
+	if dataFile == "" {
+		*bytes, err = ioutil.ReadAll(os.Stdin)
+	} else {
+		*bytes, err = ioutil.ReadFile(dataFile)
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func parseDataFile(bytes []byte, dataFormat string, data map[string]interface{}) {
+	var err error
+
+	switch dataFormat {
+	case "json":
+		err = json.Unmarshal(bytes, &data)
+	case "yaml":
+		err = yaml.Unmarshal(bytes, &data)
+	default:
+		log.Fatal(fmt.Errorf(
+			`The data format "%s" is invalid or not supported, use "json" or "yaml"`,
+			dataFormat,
+		))
+	}
+	if err != nil {
+		log.Fatal(err)
 	}
 }
