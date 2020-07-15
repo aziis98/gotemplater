@@ -125,7 +125,11 @@ func main() {
 		output = file
 	}
 
-	readContentFile(contentFile, data)
+	contentBytes := readContentFile(contentFile)
+	if contentBytes != nil {
+		data["Content"] = template.HTML(contentBytes)
+		data["content"] = template.HTML(contentBytes)
+	}
 
 	if execute == "" {
 		tmpl := template.New("")
@@ -150,15 +154,20 @@ func main() {
 	}
 }
 
-func readContentFile(contentFile string, data map[string]interface{}) {
+func readContentFile(contentFile string) (bytes []byte) {
+	var err error
+
 	if contentFile != "" {
-		bytes, err := ioutil.ReadFile(contentFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		data["Content"] = string(bytes)
-		data["content"] = string(bytes)
+		bytes, err = ioutil.ReadFile(contentFile)
+	} else if contentFile == "-" {
+		bytes, err = ioutil.ReadAll(os.Stdin)
 	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return
 }
 
 func readDataFile(dataFile string, bytes *[]byte) {
