@@ -3,9 +3,9 @@
 
 [One file CLI utility](./main.go) to render Go templates to stdout and files from JSON and YAML "data" files and text content from files and stdin.
 
-<img src="https://i.imgur.com/DnTpnMk.png" alt="imgur">
+![Imgur](https://i.imgur.com/gkeFCO0.png)
 <p align="center">
-    A simple example of piping content down a pipeline to
+    An example of piping content down a pipeline to
     <br>
     build a static web page, the shell script <a href="./example/chaining/build.sh">is here</a>
 </p>
