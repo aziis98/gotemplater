@@ -4,7 +4,11 @@
 [One file CLI utility](./main.go) to render Go templates to stdout and files from JSON and YAML "data" files and text content from files and stdin.
 
 <img src="https://i.imgur.com/DnTpnMk.png" alt="imgur">
-<p align="center">A simple example of piping content down a pipeline to build a static web page, the shell script <a href="./example/chaining/build.sh">is here</a></p>
+<p align="center">
+    A simple example of piping content down a pipeline to
+    <br>
+    build a static web page, the shell script <a href="./example/chaining/build.sh">is here</a>
+</p>
 
 **Why?.** I needed an extremely simple way to render templates with a CLI as I am moving my sites to use a Makefile instead of a full static site generator and I'd like a lot of flexibilty.
 
