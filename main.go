@@ -14,25 +14,31 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+func check(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 var helpMessage = strings.TrimLeftFunc(`
 gotemplater - A super small CLI utility wrapping template.Execute()
               and template.ExecuteTemplate()
 
 USAGE: 
-gotemplater [OPTIONS...] [FILES...] < [CONFIG_FILE...]
+gotemplater [<option>...] [<template_file>...]
 
 OPTIONS:
     -h, --help			Shows this message
     
-    -o, --output FILE		File to write to, by default uses stdout
+    -o, --output <file>		File to write to, by default uses stdout
     
-    -e, --execute NAME		Template name to pass to .ExecuteTemplate(), otherwise uses .Execute()
+    -e, --execute <name>		Template name to pass to .ExecuteTemplate(), otherwise uses .Execute()
 
-    -c, --content FILE		Adds a "content"/"Content" variable to the context of the template for 
-				rendering importing data from files
+    -c, --content <file>		Adds a "content"/"Content" variable to the context of the template for 
+				rendering importing data from files, can be "-" for stdin
 
-    -d, --data DATA_FILE	Data file to use, otherwise use stdin
-    -f, --format FORMAT		Format for the data file, can be one of: *"json", "yaml"
+    -d, --data <file>		Data file to use, otherwise use stdin
+    -f, --format <format>		Format for the data file, can be one of: *"json", "yaml"
 				*the default format is JSON.
 
 EXAMPLES:
@@ -52,7 +58,7 @@ func main() {
 	args := os.Args[1:]
 	templateFiles := []string{}
 
-	execute := ""
+	templateName := ""
 	contentFile := ""
 	outputFile := ""
 
@@ -81,7 +87,7 @@ func main() {
 			fmt.Print(helpMessage)
 			os.Exit(0)
 		case "-e", "--execute":
-			execute = flagValue
+			templateName = flagValue
 			args = args[2:]
 		case "-c", "--content":
 			contentFile = flagValue
@@ -105,33 +111,31 @@ func main() {
 		}
 	}
 
-	var bytes []byte
+	data := getData(dataFile, dataFormat)
+	output := getOutputWriter(outputFile)
 
-	readDataFile(dataFile, &bytes)
+	content := getContentFile(contentFile)
+	if len(content) > 0 {
+		data["Content"] = template.HTML(content)
+		data["content"] = template.HTML(content)
+	}
 
-	var data = map[string]interface{}{}
+	executeTemplates(templateName, templateFiles, output, data)
+}
 
-	parseDataFile(bytes, dataFormat, data)
-
-	var output io.Writer
-	if outputFile == "" {
-		output = os.Stdout
+func getOutputWriter(file string) io.Writer {
+	if file == "" {
+		return os.Stdout
 	} else {
-		file, err := os.Create(outputFile)
-		if err != nil {
-			log.Fatal(err)
-		}
+		file, err := os.Create(file)
+		check(err)
 
-		output = file
+		return file
 	}
+}
 
-	contentBytes := readContentFile(contentFile)
-	if contentBytes != nil {
-		data["Content"] = template.HTML(contentBytes)
-		data["content"] = template.HTML(contentBytes)
-	}
-
-	if execute == "" {
+func executeTemplates(templateName string, templateFiles []string, w io.Writer, data interface{}) {
+	if templateName == "" {
 		tmpl := template.New("")
 
 		for _, templateFile := range templateFiles {
@@ -143,62 +147,58 @@ func main() {
 			tmpl.Parse(string(templateSource))
 		}
 
-		tmpl.Execute(output, data)
+		tmpl.Execute(w, data)
 	} else {
 		tmpl, err := template.New("").ParseFiles(templateFiles...)
-		if err != nil {
-			log.Fatal(err)
-		}
+		check(err)
 
-		tmpl.ExecuteTemplate(output, execute, data)
+		tmpl.ExecuteTemplate(w, templateName, data)
 	}
 }
 
-func readContentFile(contentFile string) (bytes []byte) {
-	var err error
+func getContentFile(file string) string {
+	switch file {
+	case "":
+		return ""
+	case "-":
+		bytes, err := ioutil.ReadAll(os.Stdin)
+		check(err)
 
-	if contentFile != "" {
-		bytes, err = ioutil.ReadFile(contentFile)
-	} else if contentFile == "-" {
-		bytes, err = ioutil.ReadAll(os.Stdin)
-	}
+		return string(bytes)
+	default:
+		bytes, err := ioutil.ReadFile(file)
+		check(err)
 
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return
-}
-
-func readDataFile(dataFile string, bytes *[]byte) {
-	var err error
-
-	if dataFile == "" {
-		*bytes, err = ioutil.ReadAll(os.Stdin)
-	} else {
-		*bytes, err = ioutil.ReadFile(dataFile)
-	}
-
-	if err != nil {
-		log.Fatal(err)
+		return string(bytes)
 	}
 }
 
-func parseDataFile(bytes []byte, dataFormat string, data map[string]interface{}) {
-	var err error
+func getData(file string, format string) (data map[string]interface{}) {
+	var bytes []byte
 
-	switch dataFormat {
+	if file != "" {
+		var err error
+
+		bytes, err = ioutil.ReadFile(file)
+		check(err)
+	}
+	if bytes == nil {
+		return
+	}
+
+	switch format {
 	case "json":
-		err = json.Unmarshal(bytes, &data)
+		err := json.Unmarshal(bytes, &data)
+		check(err)
 	case "yaml":
-		err = yaml.Unmarshal(bytes, &data)
+		err := yaml.Unmarshal(bytes, &data)
+		check(err)
 	default:
 		log.Fatal(fmt.Errorf(
 			`The data format "%s" is invalid or not supported, use "json" or "yaml"`,
-			dataFormat,
+			format,
 		))
 	}
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	return
 }

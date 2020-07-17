@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Document</title>
+</head>
+
+<body>
+    <nav>
+        {{- range .nav_items }}
+        <div class="nav-item">{{ . }}</div>
+        {{- end }}
+    </nav>
+
+    {{ .content }}
+</body>
+
+</html>
