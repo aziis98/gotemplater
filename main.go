@@ -126,12 +126,12 @@ func main() {
 func getOutputWriter(file string) io.Writer {
 	if file == "" {
 		return os.Stdout
-	} else {
-		file, err := os.Create(file)
-		check(err)
-
-		return file
 	}
+
+	w, err := os.Create(file)
+	check(err)
+
+	return w
 }
 
 func executeTemplates(templateName string, templateFiles []string, w io.Writer, data interface{}) {
