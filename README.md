@@ -1,5 +1,5 @@
 
-# Gotemplater
+# Go Templater
 
 [One file CLI utility](./main.go) to render Go templates to stdout and files from JSON and YAML "data" files and text content from files and stdin.
 
@@ -14,9 +14,41 @@
 
 Under here there is a small documentation but it is probabily faster if you read the code directly as it is about 200 lines.
 
-## Options
+## Usage
 
-TODO
+    gotemplater [options...] [template files...]
+
+### Options
+
+- `-h`, `--help`
+    Shows this message
+- `-o`, `--output <file>`
+    File to write to, by default uses stdout
+- `-e`, `--execute <name>`
+    Template name to pass to .ExecuteTemplate(), otherwise uses .Execute()
+- `-c`, `--content <file>`
+    Adds a `content` and `Content` variable to the context of the template for rendering importing data from files, can be `-` for stdin
+- `-d`, `--data <file>`
+    Data file to use
+- `-f`, `--format <format>`
+    Format for the data file, can be `json` or `yaml`. By default it's `json`.
+
+### Examples
+
+- Print to stdout: 
+    
+        gotemplater -d data.json template.html 
+
+- Print to file: 
+    
+        gotemplater -d data.json -o rendered.html template.html
+
+- Get the content from stdin: 
+    
+        gotemplater -f yaml -d data.yaml -c - template.html > rendered.html
+
+- Example of chaining in the image on top: [chaining](./example/chaining/)
+
 
 ## TODO
 

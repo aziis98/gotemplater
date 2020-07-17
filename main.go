@@ -25,32 +25,34 @@ gotemplater - A super small CLI utility wrapping template.Execute()
               and template.ExecuteTemplate()
 
 USAGE: 
-gotemplater [<option>...] [<template_file>...]
-
-OPTIONS:
-    -h, --help			Shows this message
-    
-    -o, --output <file>		File to write to, by default uses stdout
-    
-    -e, --execute <name>		Template name to pass to .ExecuteTemplate(), otherwise uses .Execute()
-
-    -c, --content <file>		Adds a "content"/"Content" variable to the context of the template for 
-				rendering importing data from files, can be "-" for stdin
-
-    -d, --data <file>		Data file to use, otherwise use stdin
-    -f, --format <format>		Format for the data file, can be one of: *"json", "yaml"
-				*the default format is JSON.
+gotemplater [options...] [template files...]
 
 EXAMPLES:
 
     Print to stdout: 
-        gotemplater template.html < data.json
+        gotemplater -f yaml -d data.yaml template.html
 
     Print to file: 
-        gotemplater -o rendered.html template.html < data.json
+        gotemplater -d data.json -o rendered.html template.html
 
     Get data from file in another format: 
         gotemplater -f yaml -d data.yaml -o rendered.html template.html
+
+    Get content from stdin, data from config.json and execute "main" defined in the given templates: 
+        gotemplater -d config.json -c - -e main template-1.html template-2.html > rendered.html
+
+OPTIONS:
+    -h, --help			Shows this message
+
+    -o, --output <file>		File to write to, by default uses stdout
+
+    -e, --execute <name>	Template name to pass to .ExecuteTemplate(), otherwise uses .Execute()
+    -c, --content <file>	Adds a content and Content variable to the context of the template 
+				for rendering importing data from files, can be - for stdin
+
+
+    -d, --data <file>		Data file to use
+    -f, --format <format>	Format for the data file, can be json or yaml. By default it's json.
 
 `, unicode.IsSpace)
 
