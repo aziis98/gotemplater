@@ -177,6 +177,7 @@ func getContentFile(file string) string {
 
 func getData(file string, format string) (data map[string]interface{}) {
 	var bytes []byte
+	data = make(map[string]interface{})
 
 	if file != "" {
 		var err error
