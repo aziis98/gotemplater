@@ -1,7 +1,7 @@
 
 # Go Templater
 
-[One file CLI utility](./main.go) to render Go templates to stdout and files from JSON and YAML "data" files and text content from files and stdin.
+[One file CLI utility](./main.go) to render Go templates using _"data" files_ (in Json or Yaml) and _text content_ from files or stdin.
 
 ![Imgur](https://i.imgur.com/gkeFCO0.png)
 <p align="center">
